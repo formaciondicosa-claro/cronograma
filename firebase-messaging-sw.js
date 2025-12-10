@@ -1,0 +1,1 @@
+// Service worker FCM. Reemplazar con versión final.

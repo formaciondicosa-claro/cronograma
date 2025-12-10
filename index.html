@@ -1,0 +1,407 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <title>Cronograma – Formadores</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+
+  <style>
+    :root{
+      --violeta:#a78bfa;
+      --violeta-osc:#7c3aed;
+      --bg:#050617;
+      --bg2:#111827;
+      --card:#17182b;
+      --text:#e8e6ff;
+      --muted:#bfbde6;
+      --border-soft:rgba(167,139,250,.25);
+      --danger:#f97373;
+      --success:#34d399;
+    }
+    *{box-sizing:border-box;font-family:Inter,system-ui,Segoe UI,Roboto,sans-serif;}
+    body{
+      margin:0;min-height:100vh;
+      background:radial-gradient(circle at top,var(--bg2),var(--bg));
+      color:var(--text);
+      display:flex;justify-content:center;align-items:flex-start;
+      padding:16px;
+    }
+    .container{width:100%;max-width:900px;}
+
+    h1{
+      text-align:center;margin:8px 0 18px;
+      color:var(--violeta);
+      font-size:24px;
+    }
+
+    .card{
+      background:var(--card);
+      border-radius:20px;
+      border:1px solid var(--border-soft);
+      padding:18px;
+      margin-bottom:18px;
+      box-shadow:0 18px 45px rgba(0,0,0,.65);
+    }
+
+    /* LOGIN */
+    label{font-size:13px;color:var(--muted);display:block;margin-bottom:4px;}
+    input{
+      width:100%;padding:10px 12px;border-radius:12px;
+      border:1px solid var(--border-soft);
+      background:#0b0c1f;color:var(--text);
+      font-size:14px;margin-bottom:10px;
+    }
+    button{
+      border:none;border-radius:999px;
+      padding:10px 16px;font-size:14px;
+      cursor:pointer;
+      background:var(--violeta-osc);color:white;
+      display:inline-flex;align-items:center;justify-content:center;
+      gap:6px;
+    }
+    button:hover{background:var(--violeta);}
+    button.secondary{
+      background:transparent;border:1px solid var(--border-soft);
+      color:var(--muted);
+    }
+    button.secondary:hover{
+      border-color:var(--violeta);color:var(--violeta);
+    }
+    .topbar{
+      display:flex;justify-content:space-between;align-items:center;
+      gap:8px;margin-bottom:10px;font-size:13px;color:var(--muted);
+    }
+    .user-block div:first-child{font-weight:600;color:var(--text);}
+    .hidden{display:none;}
+
+    /* TARJETAS DE ACTIVIDAD – ESTILO B */
+    .lista-actividades{margin-top:8px;}
+    .actividad{
+      background:#0b1024;
+      border-radius:16px;
+      border:1px solid rgba(148,163,184,.35);
+      padding:12px 14px;
+      margin-bottom:10px;
+      display:flex;
+      gap:12px;
+    }
+    .actividad-icono{
+      width:38px;height:38px;border-radius:14px;
+      background:radial-gradient(circle at top,var(--violeta),var(--violeta-osc));
+      display:flex;align-items:center;justify-content:center;
+      font-size:18px;
+    }
+    .actividad-contenido{flex:1;}
+    .actividad-titulo{
+      font-size:15px;font-weight:600;margin-bottom:2px;
+    }
+    .actividad-sub{
+      font-size:12px;color:var(--muted);
+    }
+    .actividad-detalle{
+      font-size:12px;color:var(--muted);margin-top:4px;
+    }
+    .actividad-footer{
+      display:flex;justify-content:space-between;align-items:center;
+      margin-top:8px;gap:8px;flex-wrap:wrap;
+    }
+    .estado{
+      padding:3px 10px;border-radius:999px;font-size:11px;font-weight:600;
+    }
+    .estado-pendiente{background:rgba(234,179,8,.15);color:#facc15;}
+    .estado-curso{background:rgba(56,189,248,.18);color:#7dd3fc;}
+    .estado-finalizada{background:rgba(52,211,153,.18);color:#6ee7b7;}
+    .btn-mini{
+      padding:7px 12px;font-size:12px;
+    }
+
+    #msg-error{
+      font-size:12px;color:var(--danger);margin-top:6px;
+    }
+    #msg-info{
+      font-size:12px;color:var(--muted);margin-top:6px;
+    }
+
+    @media (max-width:600px){
+      .topbar{flex-direction:column;align-items:flex-start;}
+      button{width:100%;justify-content:center;}
+      .actividad{flex-direction:row;}
+      .actividad-footer{flex-direction:column;align-items:flex-start;}
+      .actividad-footer button{width:100%;}
+    }
+  </style>
+
+  <!-- Firebase SDKs -->
+  <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-auth-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore-compat.js"></script>
+</head>
+
+<body>
+<div class="container">
+  <h1>📅 Cronograma – Formadores</h1>
+
+  <!-- LOGIN -->
+  <div id="login-card" class="card">
+    <h2 style="margin-top:0;margin-bottom:8px;font-size:18px;">Iniciar sesión</h2>
+    <p style="font-size:13px;color:var(--muted);margin-top:0;">
+      Ingresa con tu correo y contraseña de formador.
+    </p>
+    <label>Correo</label>
+    <input id="email" type="email" autocomplete="email">
+    <label>Contraseña</label>
+    <input id="password" type="password" autocomplete="current-password">
+    <button onclick="login()">Ingresar</button>
+    <p id="login-msg" style="margin-top:8px;font-size:12px;color:var(--danger);"></p>
+  </div>
+
+  <!-- APP FORMADOR -->
+  <div id="app-card" class="card hidden">
+    <div class="topbar">
+      <div class="user-block">
+        <div id="user-name"></div>
+        <div id="user-email"></div>
+      </div>
+      <button class="secondary" onclick="logout()">Cerrar sesión</button>
+    </div>
+
+    <h3 style="margin:4px 0 10px;font-size:16px;">Mis actividades asignadas</h3>
+    <div id="msg-info" class="hidden"></div>
+    <div id="msg-error" class="hidden"></div>
+
+    <div id="lista" class="lista-actividades"></div>
+    <p id="sin-actividades" class="hidden" style="font-size:13px;color:var(--muted);margin-top:10px;">
+      No tienes actividades asignadas por ahora.
+    </p>
+  </div>
+</div>
+
+<script>
+  // ---------------- CONFIG FIREBASE ----------------
+  const firebaseConfig = {
+    apiKey: "AIzaSyAWRPkQjGDWjRy-Axvnu0Iz09_lkahfZMY",
+    authDomain: "cronogramas-f0a68.firebaseapp.com",
+    projectId: "cronogramas-f0a68",
+    storageBucket: "cronogramas-f0a68.firebasestorage.app",
+    messagingSenderId: "1007818459934",
+    appId: "1:1007818459934:web:3ed761ba0bc3d8f4c6d70f",
+    measurementId: "G-WJN6WNE1ZZ"
+  };
+  firebase.initializeApp(firebaseConfig);
+  const auth = firebase.auth();
+  const db   = firebase.firestore();
+
+  let unsubActividades = null;
+
+  // ---------------- LOGIN ----------------
+  function login(){
+    const email = document.getElementById('email').value.trim();
+    const pass  = document.getElementById('password').value.trim();
+    const msgEl = document.getElementById('login-msg');
+    msgEl.textContent = "";
+
+    if(!email || !pass){
+      msgEl.textContent = "Completa correo y contraseña.";
+      return;
+    }
+
+    auth.signInWithEmailAndPassword(email, pass)
+      .catch(err=>{
+        console.error(err);
+        msgEl.textContent = "Error al ingresar: " + err.message;
+      });
+  }
+
+  function logout(){
+    auth.signOut();
+  }
+
+  // ---------------- ESTADO DE AUTENTICACIÓN ----------------
+  auth.onAuthStateChanged(async user=>{
+    const loginCard = document.getElementById('login-card');
+    const appCard   = document.getElementById('app-card');
+    const lista     = document.getElementById('lista');
+    const sinAct    = document.getElementById('sin-actividades');
+    const msgInfo   = document.getElementById('msg-info');
+    const msgErr    = document.getElementById('msg-error');
+
+    if(user){
+      loginCard.classList.add('hidden');
+      appCard.classList.remove('hidden');
+
+      msgInfo.classList.add('hidden');
+      msgErr.classList.add('hidden');
+
+      document.getElementById('user-email').textContent = user.email;
+
+      // Nombre desde /usuarios
+      try{
+        const snap = await db.collection('usuarios').doc(user.email).get();
+        const nombre = snap.exists ? snap.data().nombre : user.email;
+        document.getElementById('user-name').textContent = nombre;
+      }catch(e){
+        console.error(e);
+        document.getElementById('user-name').textContent = user.email;
+      }
+
+      // Suscribirse a actividades
+      suscribirActividades(user.email);
+    }else{
+      loginCard.classList.remove('hidden');
+      appCard.classList.add('hidden');
+      lista.innerHTML = "";
+      sinAct.classList.add('hidden');
+      msgInfo.classList.add('hidden');
+      msgErr.classList.add('hidden');
+      if(unsubActividades){unsubActividades();unsubActividades=null;}
+    }
+  });
+
+  // ---------------- LECTURA DE ACTIVIDADES ----------------
+  function suscribirActividades(correo){
+    const lista   = document.getElementById('lista');
+    const sinAct  = document.getElementById('sin-actividades');
+    const msgInfo = document.getElementById('msg-info');
+    const msgErr  = document.getElementById('msg-error');
+
+    if(unsubActividades){unsubActividades();}
+
+    // IMPORTANTE: sin orderBy, para evitar índices compuestos
+    unsubActividades = db.collection('actividades')
+      .where('formadorCorreo','==',correo)
+      .onSnapshot(
+        snap=>{
+          lista.innerHTML = "";
+          if(snap.empty){
+            sinAct.classList.remove('hidden');
+            msgInfo.classList.add('hidden');
+            msgErr.classList.add('hidden');
+            return;
+          }
+          sinAct.classList.add('hidden');
+          msgErr.classList.add('hidden');
+
+          // Convertimos a arreglo y ordenamos por fecha en JS
+          const actividades = [];
+          snap.forEach(doc=>{
+            actividades.push({id:doc.id, ...doc.data()});
+          });
+
+          actividades.sort((a,b)=>{
+            const fa = a.fecha || "";
+            const fb = b.fecha || "";
+            // fechas en formato YYYY-MM-DD se ordenan bien como string
+            if(fa < fb) return -1;
+            if(fa > fb) return 1;
+            return 0;
+          });
+
+          actividades.forEach(a=>{
+            lista.appendChild(crearTarjetaActividad(a));
+          });
+
+          msgInfo.textContent = "Total actividades: " + actividades.length;
+          msgInfo.classList.remove('hidden');
+        },
+        err=>{
+          console.error(err);
+          msgErr.textContent = "Error al cargar actividades: " + err.message;
+          msgErr.classList.remove('hidden');
+        }
+      );
+  }
+
+  function crearTarjetaActividad(a){
+    const div = document.createElement('div');
+    div.className = "actividad";
+
+    const estado = a.estado || 'pendiente';
+    let claseEstado = 'estado-pendiente';
+    let textoEstado = 'Pendiente';
+    if(estado === 'en_curso'){claseEstado = 'estado-curso'; textoEstado='En curso';}
+    if(estado === 'finalizada'){claseEstado = 'estado-finalizada'; textoEstado='Finalizada';}
+
+    const fechaTxt = a.fecha || 'Sin fecha';
+    const salaTxt  = a.sala || '-';
+
+    div.innerHTML = `
+      <div class="actividad-icono">📘</div>
+      <div class="actividad-contenido">
+        <div class="actividad-titulo">${a.capacitacion || '(Sin nombre)'}</div>
+        <div class="actividad-sub">Sala: <b>${salaTxt}</b></div>
+        <div class="actividad-detalle">Fecha programada: ${fechaTxt}</div>
+        <div class="actividad-footer">
+          <span class="estado ${claseEstado}">${textoEstado}</span>
+          <div style="display:flex;gap:8px;flex-wrap:wrap;">
+            <button class="btn-mini" onclick="iniciarActividad('${a.id}')">Iniciar actividad</button>
+            <button class="btn-mini secondary" onclick="finalizarActividad('${a.id}')">Finalizar</button>
+          </div>
+        </div>
+      </div>
+    `;
+    // Deshabilitar botones según estado
+    const btns = div.querySelectorAll('button');
+    if(estado !== 'pendiente'){
+      btns[0].disabled = true;
+      btns[0].style.opacity = .5;
+      btns[0].style.cursor = 'default';
+    }
+    if(estado !== 'en_curso'){
+      btns[1].disabled = true;
+      btns[1].style.opacity = .5;
+      btns[1].style.cursor = 'default';
+    }
+
+    return div;
+  }
+
+  // ---------------- ACCIONES ----------------
+  async function registrarHistorial(accion, actividadId){
+    const user = auth.currentUser;
+    if(!user) return;
+
+    const actSnap = await db.collection('actividades').doc(actividadId).get();
+    const a = actSnap.exists ? actSnap.data() : {};
+
+    await db.collection('historialActividades').add({
+      actividadId,
+      capacitacion: a.capacitacion || '',
+      sala: a.sala || '',
+      formadorAsignado: a.formadorNombre || '',
+      accion,
+      realizadoPorCorreo: user.email,
+      realizadoPorNombre: document.getElementById('user-name').textContent || user.email,
+      fechaHora: firebase.firestore.FieldValue.serverTimestamp()
+    });
+  }
+
+  async function iniciarActividad(id){
+    if(!confirm('¿Iniciar esta actividad?')) return;
+    const ref = db.collection('actividades').doc(id);
+    await ref.update({
+      estado:'en_curso',
+      ultimaActualizacion: firebase.firestore.FieldValue.serverTimestamp()
+    });
+    await db.collection('iniciosActividad').add({
+      actividadId:id,
+      fechaHora: firebase.firestore.FieldValue.serverTimestamp(),
+      iniciadoPorCorreo: auth.currentUser.email,
+      iniciadoPorNombre: document.getElementById('user-name').textContent
+    });
+    await registrarHistorial('iniciada', id);
+    alert('Actividad iniciada.');
+  }
+
+  async function finalizarActividad(id){
+    if(!confirm('¿Marcar actividad como finalizada?')) return;
+    const ref = db.collection('actividades').doc(id);
+    await ref.update({
+      estado:'finalizada',
+      ultimaActualizacion: firebase.firestore.FieldValue.serverTimestamp()
+    });
+    await registrarHistorial('finalizada', id);
+    alert('Actividad finalizada.');
+  }
+</script>
+</body>
+</html>
