@@ -266,7 +266,6 @@
 
     if(unsubActividades){unsubActividades();}
 
-    // IMPORTANTE: sin orderBy, para evitar índices compuestos
     unsubActividades = db.collection('actividades')
       .where('formadorCorreo','==',correo)
       .onSnapshot(
@@ -281,7 +280,6 @@
           sinAct.classList.add('hidden');
           msgErr.classList.add('hidden');
 
-          // Convertimos a arreglo y ordenamos por fecha en JS
           const actividades = [];
           snap.forEach(doc=>{
             actividades.push({id:doc.id, ...doc.data()});
@@ -290,7 +288,6 @@
           actividades.sort((a,b)=>{
             const fa = a.fecha || "";
             const fb = b.fecha || "";
-            // fechas en formato YYYY-MM-DD se ordenan bien como string
             if(fa < fb) return -1;
             if(fa > fb) return 1;
             return 0;
@@ -311,6 +308,7 @@
       );
   }
 
+  // ---------------- TARJETAS (CON HORAS) ----------------
   function crearTarjetaActividad(a){
     const div = document.createElement('div');
     div.className = "actividad";
@@ -324,12 +322,26 @@
     const fechaTxt = a.fecha || 'Sin fecha';
     const salaTxt  = a.sala || '-';
 
+    // TEXTO NUEVO: hora inicio / fin
+    let horasTxt = "";
+    if(a.horaInicio && a.horaFin){
+      horasTxt = `⏰ ${a.horaInicio} – ${a.horaFin}`;
+    }else if(a.horaInicio){
+      horasTxt = `⏰ ${a.horaInicio}`;
+    }else if(a.horaFin){
+      horasTxt = `⏰ ${a.horaFin}`;
+    }
+
     div.innerHTML = `
       <div class="actividad-icono">📘</div>
       <div class="actividad-contenido">
         <div class="actividad-titulo">${a.capacitacion || '(Sin nombre)'}</div>
+
         <div class="actividad-sub">Sala: <b>${salaTxt}</b></div>
         <div class="actividad-detalle">Fecha programada: ${fechaTxt}</div>
+
+        ${horasTxt ? `<div class="actividad-detalle">${horasTxt}</div>` : ""}
+
         <div class="actividad-footer">
           <span class="estado ${claseEstado}">${textoEstado}</span>
           <div style="display:flex;gap:8px;flex-wrap:wrap;">
@@ -339,6 +351,7 @@
         </div>
       </div>
     `;
+
     // Deshabilitar botones según estado
     const btns = div.querySelectorAll('button');
     if(estado !== 'pendiente'){
